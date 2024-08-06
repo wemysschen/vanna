@@ -42,6 +42,60 @@ class Qianfan_Chat(VannaBase):
 
   def assistant_message(self, message: str) -> any:
     return {"role": "assistant", "content": message}
+  
+
+  def add_ddl_to_prompt(
+        self, initial_prompt: str, ddl_list: list[str], max_tokens: int = 14000
+    ) -> str:
+        if len(ddl_list) > 0:
+            initial_prompt += "\n==表结构如下 \n"
+
+            for ddl in ddl_list:
+                if (
+                    self.str_to_approx_token_count(initial_prompt)
+                    + self.str_to_approx_token_count(ddl)
+                    < max_tokens
+                ):
+                    initial_prompt += f"{ddl}\n\n"
+
+        return initial_prompt
+  
+
+  def add_documentation_to_prompt(
+        self,
+        initial_prompt: str,
+        documentation_list: list[str],
+        max_tokens: int = 14000,
+    ) -> str:
+        if len(documentation_list) > 0:
+            initial_prompt += "\n===附带的上下文如下: \n\n"
+
+            for documentation in documentation_list:
+                if (
+                    self.str_to_approx_token_count(initial_prompt)
+                    + self.str_to_approx_token_count(documentation)
+                    < max_tokens
+                ):
+                    initial_prompt += f"{documentation}\n\n"
+
+        return initial_prompt
+  
+
+  def add_sql_to_prompt(
+        self, initial_prompt: str, sql_list: list[str], max_tokens: int = 14000
+    ) -> str:
+        if len(sql_list) > 0:
+            initial_prompt += "\n===问答SQL对如下:\n\n"
+
+            for question in sql_list:
+                if (
+                    self.str_to_approx_token_count(initial_prompt)
+                    + self.str_to_approx_token_count(question["sql"])
+                    < max_tokens
+                ):
+                    initial_prompt += f"{question['question']}\n{question['sql']}\n\n"
+
+        return initial_prompt
 
   def get_sql_prompt(
     self,
@@ -77,11 +131,13 @@ class Qianfan_Chat(VannaBase):
     """
 
     if initial_prompt is None:
-      initial_prompt = f"You are a {self.dialect} expert. " + \
-                       "Please help to generate a SQL to answer the question based on some context.Please don't give any explanation for your answer. Just only generate a SQL \n"
+      initial_prompt = f"你是一个SQL专家. " + \
+                       "请根据上下文生成一个sql来回答问题。请不要对sql进行解释，仅仅就是生成sql。\n"
+      # initial_prompt = f"You are a {self.dialect} expert. " + \
+      #                  "Please help to generate a SQL to answer the question based on some context.Please don't give any explanation for your answer. Just only generate a SQL \n"
 
     initial_prompt = self.add_ddl_to_prompt(
-      initial_prompt, ddl_list, max_tokens=self.max_tokens
+      initial_prompt, ddl_list=ddl_list, max_tokens=self.max_tokens
     )
 
     if self.static_documentation != "":
@@ -93,7 +149,7 @@ class Qianfan_Chat(VannaBase):
     message_log = []
 
     if question_sql_list is None or len(question_sql_list) == 0:
-      initial_prompt = initial_prompt + f"question: {question}"
+      initial_prompt = initial_prompt + f"问题: {question}"
       message_log.append(self.user_message(initial_prompt))
     else:
       for i, example in question_sql_list:
@@ -102,7 +158,7 @@ class Qianfan_Chat(VannaBase):
         else:
           if example is not None and "question" in example and "sql" in example:
             if i == 0:
-              initial_prompt = initial_prompt + f"question: {example['question']}"
+              initial_prompt = initial_prompt + f"问题: {example['question']}"
               message_log.append(self.user_message(initial_prompt))
             else:
               message_log.append(self.user_message(example["question"]))
