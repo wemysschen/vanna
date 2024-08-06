@@ -23,19 +23,19 @@ class Elastic_VectorStore(VannaBase):
 
     self.document_index = config.get("document_index")
     self.document_index_type = config.get("document_index_type", "hnsw")
-    self.document_index_query_field = config.get("document_index_query_field", "text")
+    self.document_index_query_field = config.get("document_index_query_field", "doc")
     self.document_index_vector_query_field = config.get("document_index_vector_query_field", "document")
 
 
     self.ddl_index = config.get("ddl_index")
     self.ddl_index_type = config.get("ddl_index_type", "hnsw")
-    self.ddl_index_query_field = config.get("ddl_index_query_field", "text")
+    self.ddl_index_query_field = config.get("ddl_index_query_field", "doc")
     self.ddl_index_vector_query_field = config.get(
       "ddl_index_vector_query_field", "ddl")
 
     self.question_sql_index = config.get("question_sql_index")
     self.question_sql_index_type = config.get("question_sql_index_type", "hnsw")
-    self.question_sql_index_query_field = config.get("question_sql_index_query_field", "text")
+    self.question_sql_index_query_field = config.get("question_sql_index_query_field", "doc")
     self.question_sql_index_vector_query_field = config.get(
       "question_sql_index_vector_query_field", "qa_sql")
 
